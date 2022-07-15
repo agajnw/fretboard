@@ -1,6 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "FretView.h"
 
 //==============================================================================
 /*
@@ -25,5 +26,7 @@ public:
 
 private:
     //==============================================================================
+    FretboardView fretboard;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

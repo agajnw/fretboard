@@ -1,4 +1,5 @@
 #include "MainComponent.h"
+#include "FretView.cpp"
 
 //==============================================================================
 MainComponent::MainComponent()
@@ -19,6 +20,8 @@ MainComponent::MainComponent()
         // Specify the number of input and output channels that we want to open
         setAudioChannels (2, 2);
     }
+
+    addAndMakeVisible (fretboard);
 }
 
 MainComponent::~MainComponent()
@@ -69,4 +72,5 @@ void MainComponent::paint (juce::Graphics& g)
 
 void MainComponent::resized()
 {
+    fretboard.setBounds (getLocalBounds());
 }
