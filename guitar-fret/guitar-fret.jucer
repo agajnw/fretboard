@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<JUCERPROJECT id="Nzp99r" name="Fretboard" projectType="guiapp" useAppConfig="0"
+              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" cppLanguageStandard="17">
+  <MAINGROUP id="khKfNe" name="Fretboard">
+    <GROUP id="{25FE4387-F88E-A8D2-25F6-6E5C613AE89C}" name="Source">
+      <FILE id="bgDyyR" name="FretView.cpp" compile="0" resource="0" file="Source/FretView.cpp"/>
+      <FILE id="ndHTX1" name="FretView.h" compile="0" resource="0" file="Source/FretView.h"/>
+      <FILE id="vkZx5Z" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
+      <FILE id="fEaHGs" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
+      <FILE id="PYokq9" name="MainComponent.cpp" compile="1" resource="0"
+            file="Source/MainComponent.cpp"/>
+    </GROUP>
+  </MAINGROUP>
+  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1"/>
+  <EXPORTFORMATS>
+    <XCODE_IPHONE targetFolder="Builds/iOS">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="guitar-fret"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="guitar-fret"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="../../../work/roli-software/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../../../work/roli-software/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../../../work/roli-software/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../../../work/roli-software/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../../../work/roli-software/JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../../../work/roli-software/JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../../../work/roli-software/JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../../../work/roli-software/JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../../../work/roli-software/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../../../work/roli-software/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../../../work/roli-software/JUCE/modules"/>
+      </MODULEPATHS>
+    </XCODE_IPHONE>
+    <XCODE_MAC targetFolder="Builds/MacOSX">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug"/>
+        <CONFIGURATION isDebug="0" name="Release"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="/Users/aggie/work/roli-software/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="/Users/aggie/work/roli-software/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="/Users/aggie/work/roli-software/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="/Users/aggie/work/roli-software/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="/Users/aggie/work/roli-software/JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="/Users/aggie/work/roli-software/JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="/Users/aggie/work/roli-software/JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="/Users/aggie/work/roli-software/JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="/Users/aggie/work/roli-software/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="/Users/aggie/work/roli-software/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="/Users/aggie/work/roli-software/JUCE/modules"/>
+      </MODULEPATHS>
+    </XCODE_MAC>
+  </EXPORTFORMATS>
+  <MODULES>
+    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+  </MODULES>
+</JUCERPROJECT>
