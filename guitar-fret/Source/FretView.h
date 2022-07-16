@@ -12,6 +12,28 @@
 
 #include "Metronome.h"
 
+namespace Styling
+{
+    namespace Colours
+    {
+        static inline const juce::Colour text { 0xffdce2f2 };
+        static inline const juce::Colour string { 0xff9b93a3 };
+        static inline const juce::Colour fret { 0xff93a2a3 };
+        static inline const juce::Colour metronome { 0xffe0603a };
+        static inline const juce::Colour deselected { 0xff4e5061 };
+        static inline const juce::Colour bgRaised { 0xff3a474f };
+        static inline const juce::Colour bgHalfRaised = bgRaised.withAlpha (0.4f);
+    }
+
+    inline void styleLabel (juce::Label& label)
+    {
+        label.setJustificationType (juce::Justification::centred);
+        label.setColour (juce::Label::ColourIds::textColourId,
+                         Styling::Colours::text);
+        label.setInterceptsMouseClicks (false, false);
+    }
+}
+
 struct NoteData
 {
     juce::String name;
@@ -25,9 +47,7 @@ struct FretView  : public juce::Component
         : label (d.name, d.name),
           data (d)
     {
-        label.setJustificationType (juce::Justification::centred);
-        label.setColour (juce::Label::ColourIds::textColourId,
-                         juce::Colours::darkgrey);
+        Styling::styleLabel (label);
 
         addChildComponent (label);
         label.setVisible (data.name.isNotEmpty());
@@ -53,6 +73,9 @@ struct FretView  : public juce::Component
         label.setVisible (vis && data.name.isNotEmpty());
     }
 
+    void setDrawLineUp (bool up) { drawLineUp = up; }
+    void setDrawLineDown (bool down) { drawLineDown = down; }
+
     void resized() override
     {
         label.setBounds (getLocalBounds().withSizeKeepingCentre (circleSize,
@@ -62,34 +85,38 @@ struct FretView  : public juce::Component
     void paint (juce::Graphics& g) override
     {
         const auto b = getLocalBounds();
+        const auto centreY = b.getCentreY();
 
-        const auto drawString = [&g, centreY = b.getCentreY()] (auto left, auto right)
+        const auto drawString = [&] (auto left, auto right)
         {
             g.fillRect (left, centreY, right - left, 1);
         };
 
         if (bgColour.has_value())
-            g.fillAll (bgColour->withAlpha (0.2f));
+            g.fillAll (bgColour->withAlpha (0.4f));
 
         if (! label.isVisible())
         {
-            g.setColour (lineColour);
+            g.setColour (Styling::Colours::string);
             drawString (b.getX(), b.getRight());
         }
         else
         {
-            const auto circleB = b.withSizeKeepingCentre (circleSize,
-                                                          circleSize);
+            const auto circleB = b.withSizeKeepingCentre (circleSize, circleSize);
 
-            g.setColour (data.colour.interpolatedWith (juce::Colours::white, 0.6f));
+            g.setColour (data.colour);
             g.fillEllipse (circleB.toFloat());
 
-            g.setColour (lineColour);
+            g.setColour (Styling::Colours::string);
             drawString (b.getX(), circleB.getX());
             drawString (circleB.getRight(), b.getRight());
         }
 
-        g.fillRect (b.getRight() - 1, b.getY(), 1, b.getHeight());
+        if (drawLineUp)
+            g.fillRect (b.getX(), b.getY(), 1, b.getHeight() / 2);
+
+        if (drawLineDown)
+            g.fillRect (b.getX(), centreY, 1, b.getHeight() / 2);
     }
 
     static constexpr auto circleSize = 35;
@@ -99,8 +126,10 @@ private:
 
     NoteData data;
 
-    juce::Colour lineColour = juce::Colours::white;
     std::optional<juce::Colour> bgColour;
+
+    bool drawLineUp = true;
+    bool drawLineDown = true;
 };
 
 struct StringView  : public juce::Component
@@ -108,7 +137,7 @@ struct StringView  : public juce::Component
     StringView (const juce::String& noteNameIn)
         : openNoteName (noteNameIn, noteNameIn)
     {
-        openNoteName.setJustificationType (juce::Justification::centred);
+        Styling::styleLabel (openNoteName);
 
         addAndMakeVisible (openNoteName);
 
@@ -128,7 +157,7 @@ struct StringView  : public juce::Component
         }
 
         for (auto i : { 3, 5, 7, 9, 12 })
-            frets[i - 1].setBgColour (fretHighlight);
+            frets[i - 1].setBgColour (Styling::Colours::bgHalfRaised);
     }
 
     void showFrets (const std::vector<size_t>& indices)
@@ -141,6 +170,18 @@ struct StringView  : public juce::Component
                                                      indices.end(),
                                                      f.getNoteIndex()) != indices.end());
         }
+    }
+
+    void setDrawLineUp (bool up)
+    {
+        for (auto& f : frets)
+            f.setDrawLineUp (up);
+    }
+
+    void setDrawLineDown (bool down)
+    {
+        for (auto& f : frets)
+            f.setDrawLineDown (down);
     }
 
     void resized() override
@@ -159,31 +200,21 @@ struct StringView  : public juce::Component
         box.performLayout (b);
     }
 
-    void paint (juce::Graphics& g) override
-    {
-        const auto b = getLocalBounds();
-
-        g.setColour (juce::Colours::white);
-        g.fillRect (b.getX() + FretView::circleSize - 1, b.getY(), 2, b.getHeight());
-    }
-
 private:
     static constexpr auto numFrets = 12;
 
-    std::array<NoteData, numFrets> noteData {{ { "C", juce::Colours::crimson, 0 },
-                                               { "", juce::Colours::transparentBlack, 1 },
-                                               { "D", juce::Colours::cyan, 2 },
-                                               { "", juce::Colours::transparentBlack, 3 },
-                                               { "E", juce::Colours::green, 4 },
-                                               { "F", juce::Colours::magenta, 5 },
-                                               { "", juce::Colours::transparentBlack, 6 },
-                                               { "G", juce::Colours::orange, 7 },
-                                               { "", juce::Colours::transparentBlack, 8 },
-                                               { "A", juce::Colours::yellowgreen, 9 },
-                                               { "", juce::Colours::blueviolet, 10 },
-                                               { "B", juce::Colours::transparentBlack, 11 }, }};
-
-    juce::Colour fretHighlight = juce::Colours::white;
+    std::array<NoteData, numFrets> noteData {{ { "C", juce::Colour { 0xfff56c6c }, 0 },
+                                               { "", juce::Colour { 0x00000000 }, 1 },
+                                               { "D", juce::Colour { 0xffe08d55 }, 2 },
+                                               { "", juce::Colour { 0x00000000 }, 3 },
+                                               { "E", juce::Colour { 0xff948f35 }, 4 },
+                                               { "F", juce::Colour { 0xff85466b }, 5 },
+                                               { "", juce::Colour { 0x00000000 }, 6 },
+                                               { "G", juce::Colour { 0xff3d856e }, 7 },
+                                               { "", juce::Colour { 0x00000000 }, 8 },
+                                               { "A", juce::Colour { 0xff7a6ff2 }, 9 },
+                                               { "", juce::Colour { 0x00000000 }, 10 },
+                                               { "B", juce::Colour { 0xffb76ff2 }, 11 }, }};
 
     std::array<FretView, numFrets> frets;
     juce::Label openNoteName;
@@ -193,14 +224,12 @@ private:
 struct ToggleButton  : public juce::Button
 {
     ToggleButton (const juce::String& name = {},
-                  juce::Colour colourIn = juce::Colours::white)
+                  juce::Colour colourIn = juce::Colours::black)
         : juce::Button (name),
           label (name, name),
           colour (colourIn)
     {
-        label.setJustificationType (juce::Justification::centred);
-        label.setColour (juce::Label::ColourIds::textColourId,
-                         juce::Colours::darkgrey);
+        Styling::styleLabel (label);
         label.setInterceptsMouseClicks (false, false);
 
         addAndMakeVisible (label);
@@ -213,21 +242,10 @@ struct ToggleButton  : public juce::Button
                       bool shouldDrawButtonAsDown) override
     {
         auto b = getLocalBounds();
-        auto colourToSet = [&]
-        {
-            auto col = getToggleState() ? colour.interpolatedWith (juce::Colours::white, 0.6f)
-                                        : juce::Colours::grey;
 
-            if (shouldDrawButtonAsHighlighted)
-                col = col.brighter (0.3f);
+        g.setColour (getBgColour (shouldDrawButtonAsHighlighted,
+                                  shouldDrawButtonAsDown));
 
-            if (shouldDrawButtonAsDown)
-                col = col.darker (0.5f);
-
-            return col;
-        }();
-
-        g.setColour (colourToSet);
         g.fillEllipse (b.toFloat());
     }
 
@@ -236,10 +254,24 @@ struct ToggleButton  : public juce::Button
         label.setBounds (getLocalBounds());
     }
 
+    juce::Colour getBgColour (bool shouldDrawButtonAsHighlighted,
+                              bool shouldDrawButtonAsDown) const
+    {
+        auto col = getToggleState() ? colour : Styling::Colours::deselected;
+
+        if (shouldDrawButtonAsHighlighted)
+            col = col.brighter (0.3f);
+
+        if (shouldDrawButtonAsDown)
+            col = col.darker (0.5f);
+
+        return col;
+    }
+
     juce::Label label;
     juce::Colour colour;
 
-    static constexpr auto height = 20;
+    static constexpr auto height = 30;
     static constexpr auto width = 30;
 };
 
@@ -261,6 +293,69 @@ struct NoteConfigItem  : public ToggleButton
     NoteData data;
 };
 
+struct BpmControl  : public ToggleButton,
+                     private juce::Slider::Listener
+{
+    BpmControl()
+        : ToggleButton ("M", Styling::Colours::metronome)
+    {
+        Styling::styleLabel (value);
+
+        slider.setSliderSnapsToMousePosition (false);
+        slider.setIncDecButtonsMode (juce::Slider::incDecButtonsDraggable_Vertical);
+
+        label.setColour (juce::Label::ColourIds::textColourId,
+                         Styling::Colours::text);
+        slider.setColour (juce::TextButton::textColourOnId,
+                          juce::Colours::transparentBlack);
+
+        addAndMakeVisible (slider);
+        addAndMakeVisible (value);
+
+        slider.addListener (this);
+    }
+
+    void paintButton (juce::Graphics& g,
+                      bool shouldDrawButtonAsHighlighted,
+                      bool shouldDrawButtonAsDown) override
+    {
+        auto b = getLocalBounds();
+
+        g.setColour (getBgColour (shouldDrawButtonAsHighlighted,
+                                  shouldDrawButtonAsDown));
+
+        g.fillRoundedRectangle (b.toFloat(), 12.0f);
+    }
+
+    void resized() override
+    {
+        juce::FlexBox box;
+        box.alignItems = juce::FlexBox::AlignItems::center;
+        box.justifyContent = juce::FlexBox::JustifyContent::spaceAround;
+
+        const auto margin = 4.0f;
+        const auto height = getHeight() - 2 * margin;
+
+        box.items.addArray ({ juce::FlexItem (25, height, label),
+                              juce::FlexItem (30, height, slider),
+                              juce::FlexItem (25, height, value) });
+
+        box.performLayout (getLocalBounds());
+    }
+
+    void sliderValueChanged (juce::Slider*) override
+    {
+        value.setText (juce::String ((int) slider.getValue()),
+                       juce::dontSendNotification);
+    }
+
+    juce::Label value { {}, "40" };
+    juce::Slider slider { juce::Slider::IncDecButtons, juce::Slider::NoTextBox };
+
+    static constexpr auto height = 30;
+    static constexpr auto width = 83;
+};
+
 struct ConfigView  : public juce::Component
 {
     ConfigView()
@@ -272,10 +367,7 @@ struct ConfigView  : public juce::Component
             addAndMakeVisible (item);
         }
 
-        bpm.setSliderSnapsToMousePosition (false);
-
         addAndMakeVisible (bpm);
-        addAndMakeVisible (bpmToggle);
     }
 
     void resized() override
@@ -303,35 +395,89 @@ struct ConfigView  : public juce::Component
 
         metronomeBox.alignItems = juce::FlexBox::AlignItems::center;
         metronomeBox.items.addArray ({ juce::FlexItem{}.withFlex (1.0f),
-                                       juce::FlexItem { NoteConfigItem::width,
-                                                        NoteConfigItem::height,
-                                                        bpmToggle },
                                        juce::FlexItem{}.withWidth (margin),
-                                       juce::FlexItem { NoteConfigItem::width * 4,
-                                                        NoteConfigItem::height,
+                                       juce::FlexItem { BpmControl::width,
+                                                        BpmControl::height,
                                                         bpm },
                                        juce::FlexItem{}.withFlex (1.0f) });
 
         metronomeBox.performLayout (box.items.getLast().currentBounds);
     }
 
+    void paint (juce::Graphics& g) override
+    {
+        g.fillAll (Styling::Colours::bgRaised);
+    }
+
     //=================================================================================
     static constexpr auto numNaturals = 7;
     std::array<NoteConfigItem, numNaturals> noteItems;
 
-    juce::Slider bpm { juce::Slider::IncDecButtons, juce::Slider::TextBoxRight };
-    ToggleButton bpmToggle { "M", juce::Colours::orange };
+    BpmControl bpm;
 
-    std::array<NoteData, numNaturals> noteData {{ { "C", juce::Colours::crimson, 0 },
-                                                  { "D", juce::Colours::cyan, 2 },
-                                                  { "E", juce::Colours::green, 4 },
-                                                  { "F", juce::Colours::magenta, 5 },
-                                                  { "G", juce::Colours::orange, 7 },
-                                                  { "A", juce::Colours::yellowgreen, 9 },
-                                                  { "B", juce::Colours::blueviolet, 11 } }};
+    std::array<NoteData, numNaturals> noteData {{  { "C", juce::Colour { 0xfff56c6c }, 0 },
+                                                   { "D", juce::Colour { 0xffe08d55 }, 2 },
+                                                   { "E", juce::Colour { 0xff948f35 }, 4 },
+                                                   { "F", juce::Colour { 0xff85466b }, 5 },
+                                                   { "G", juce::Colour { 0xff3d856e }, 7 },
+                                                   { "A", juce::Colour { 0xff7a6ff2 }, 9 },
+                                                   { "B", juce::Colour { 0xffb76ff2 }, 11 } }};
 
     static constexpr auto margin = 6;
     static constexpr auto height = NoteConfigItem::height * 2 + 2 * margin;
+};
+
+//=====================================================================================
+struct NumbersView  : public juce::Component
+{
+    NumbersView()
+    {
+        for (auto i = 0; i < 12; ++i)
+            box.items.add (juce::FlexItem{}.withFlex (1.0f));
+
+        for (auto& n : numbers)
+            addAndMakeVisible (n);
+    }
+
+    void resized() override
+    {
+        box.performLayout (getLocalBounds());
+
+        for (auto& n : numbers)
+            n.setBounds (box.items[n.index - 1].currentBounds.toNearestInt());
+    }
+
+    struct Number  : public juce::Component
+    {
+        Number (int i)
+            : label (juce::String (i), juce::String (i)),
+              index (i)
+        {
+            Styling::styleLabel (label);
+
+            addAndMakeVisible (label);
+        }
+
+        void resized() override
+        {
+            label.setBounds (getLocalBounds());
+        }
+
+        void paint (juce::Graphics& g) override
+        {
+            g.fillAll (Styling::Colours::bgHalfRaised);
+        }
+
+        juce::Label label;
+        int index{};
+    };
+
+    juce::FlexBox box;
+    std::array<Number, 5> numbers = {{ { 3 },
+                                       { 5 },
+                                       { 7 },
+                                       { 9 },
+                                       { 12 } }};
 };
 
 //=====================================================================================
@@ -342,7 +488,11 @@ struct FretboardView  : public juce::Component
         for (auto& s : strings)
             addAndMakeVisible (s);
 
+        strings[0].setDrawLineDown (false);
+        strings[strings.size() - 1].setDrawLineUp (false);
+
         addAndMakeVisible (config);
+        addAndMakeVisible (numbers);
     }
 
     void resized() override
@@ -350,6 +500,8 @@ struct FretboardView  : public juce::Component
         auto b = getLocalBounds();
 
         config.setBounds (b.removeFromBottom (ConfigView::height));
+        numbers.setBounds (b.removeFromTop (ConfigView::height / 2)
+                            .withTrimmedLeft (FretView::circleSize));
 
         juce::FlexBox box;
         box.flexDirection = juce::FlexBox::Direction::columnReverse;
@@ -362,7 +514,23 @@ struct FretboardView  : public juce::Component
 
     void paint (juce::Graphics& g) override
     {
-        g.fillAll (juce::Colours::darkgrey);
+        g.fillAll (juce::Colour { 0xff273036 });
+
+        const auto getCentreY = [this] (auto& c)
+        {
+            return getLocalArea (&c, c.getLocalBounds()).getCentreY();
+        };
+
+        g.setColour (Styling::Colours::fret);
+
+        auto b = getLocalBounds();
+        const auto topY = getCentreY (strings.back());
+        const auto bottomY = getCentreY (strings[0]);
+
+        g.fillRect (b.getX() + FretView::circleSize - 1,
+                    topY,
+                    2,
+                    bottomY - topY);
     }
 
     static constexpr auto numStrings = 6;
@@ -372,7 +540,7 @@ struct FretboardView  : public juce::Component
                                                  { "G" },
                                                  { "B" },
                                                  { "E" } };
-
+    NumbersView numbers;
     ConfigView config;
 };
 
@@ -388,20 +556,20 @@ public:
         for (auto& c : config.noteItems)
             c.onClick = [this] { updateSelection(); };
 
-        config.bpm.setRange (Metronome::minBpm, Metronome::maxBpm, 1.0);
-        config.bpm.setValue (metronome.getBpm());
+        config.bpm.slider.setRange (Metronome::minBpm, Metronome::maxBpm, 1.0);
+        config.bpm.slider.setValue (metronome.getBpm());
 
-        config.bpmToggle.setToggleState (metronome.isPlaying(),
-                                         juce::dontSendNotification);
+        config.bpm.setToggleState (metronome.isPlaying(),
+                                   juce::dontSendNotification);
 
-        config.bpm.onValueChange = [this, &metronome]
+        config.bpm.slider.onValueChange = [this, &metronome]
         {
-            metronome.setBpm (config.bpm.getValue());
+            metronome.setBpm (config.bpm.slider.getValue());
         };
 
-        config.bpmToggle.onClick = [this, &metronome]
+        config.bpm.onClick = [this, &metronome]
         {
-            metronome.setPlaying (config.bpmToggle.getToggleState());
+            metronome.setPlaying (config.bpm.getToggleState());
         };
     }
 
@@ -410,8 +578,8 @@ public:
         for (auto& c : config.noteItems)
             c.onClick = nullptr;
 
-        config.bpm.onValueChange = nullptr;
-        config.bpmToggle.onClick = nullptr;
+        config.bpm.slider.onValueChange = nullptr;
+        config.bpm.onClick = nullptr;
     }
 
 private:
