@@ -48,7 +48,7 @@ struct FretView  : public juce::Component
 
     void setLabelVisible (bool vis)
     {
-        label.setVisible (vis);
+        label.setVisible (vis && data.name.isNotEmpty());
     }
 
     void resized() override
@@ -131,11 +131,13 @@ struct StringView  : public juce::Component
 
     void showFrets (const std::vector<size_t>& indices)
     {
+        const auto showAll = indices.empty();
+
         for (auto& f : frets)
         {
-            f.setLabelVisible (std::find (indices.begin(),
-                                          indices.end(),
-                                          f.getNoteIndex()) != indices.end());
+            f.setLabelVisible (showAll || std::find (indices.begin(),
+                                                     indices.end(),
+                                                     f.getNoteIndex()) != indices.end());
         }
     }
 
@@ -165,15 +167,19 @@ struct StringView  : public juce::Component
 
 private:
     static constexpr auto numFrets = 12;
-    static constexpr auto numNaturals = 7;
 
-    std::array<NoteData, numNaturals> noteData {{ { "C", juce::Colours::crimson, 0 },
-                                                  { "D", juce::Colours::cyan, 1 },
-                                                  { "E", juce::Colours::green, 2 },
-                                                  { "F", juce::Colours::magenta, 3 },
-                                                  { "G", juce::Colours::orange, 4 },
-                                                  { "A", juce::Colours::yellowgreen, 5 },
-                                                  { "B", juce::Colours::blueviolet, 6 } }};
+    std::array<NoteData, numFrets> noteData {{ { "C", juce::Colours::crimson, 0 },
+                                               { "", juce::Colours::transparentBlack, 1 },
+                                               { "D", juce::Colours::cyan, 2 },
+                                               { "", juce::Colours::transparentBlack, 3 },
+                                               { "E", juce::Colours::green, 4 },
+                                               { "F", juce::Colours::magenta, 5 },
+                                               { "", juce::Colours::transparentBlack, 6 },
+                                               { "G", juce::Colours::orange, 7 },
+                                               { "", juce::Colours::transparentBlack, 8 },
+                                               { "A", juce::Colours::yellowgreen, 9 },
+                                               { "", juce::Colours::blueviolet, 10 },
+                                               { "B", juce::Colours::transparentBlack, 11 }, }};
 
     juce::Colour fretHighlight = juce::Colours::white;
 
@@ -279,12 +285,12 @@ struct ConfigView  : public juce::Component
     std::array<NoteConfigItem, numNaturals> noteItems;
 
     std::array<NoteData, numNaturals> noteData {{ { "C", juce::Colours::crimson, 0 },
-                                                  { "D", juce::Colours::cyan, 1 },
-                                                  { "E", juce::Colours::green, 2 },
-                                                  { "F", juce::Colours::magenta, 3 },
-                                                  { "G", juce::Colours::orange, 4 },
-                                                  { "A", juce::Colours::yellowgreen, 5 },
-                                                  { "B", juce::Colours::blueviolet, 6 } }};
+                                                  { "D", juce::Colours::cyan, 2 },
+                                                  { "E", juce::Colours::green, 4 },
+                                                  { "F", juce::Colours::magenta, 5 },
+                                                  { "G", juce::Colours::orange, 7 },
+                                                  { "A", juce::Colours::yellowgreen, 9 },
+                                                  { "B", juce::Colours::blueviolet, 11 } }};
 
     static constexpr auto margin = 6;
     static constexpr auto height = NoteConfigItem::height + 2 * margin;
