@@ -36,12 +36,19 @@ struct FretView  : public juce::Component
         data = d;
 
         label.setText (data.name, juce::dontSendNotification);
-        label.setVisible (data.name.isNotEmpty());
+        setLabelVisible (data.name.isNotEmpty());
     }
+
+    size_t getNoteIndex() const { return data.index; }
 
     void setBgColour (juce::Colour col)
     {
         bgColour = col;
+    }
+
+    void setLabelVisible (bool vis)
+    {
+        label.setVisible (vis);
     }
 
     void resized() override
@@ -122,6 +129,16 @@ struct StringView  : public juce::Component
             frets[i - 1].setBgColour (fretHighlight);
     }
 
+    void showFrets (const std::vector<size_t>& indices)
+    {
+        for (auto& f : frets)
+        {
+            f.setLabelVisible (std::find (indices.begin(),
+                                          indices.end(),
+                                          f.getNoteIndex()) != indices.end());
+        }
+    }
+
     void resized() override
     {
         auto b = getLocalBounds();
@@ -164,23 +181,139 @@ private:
     juce::Label openNoteName;
 };
 
+//=====================================================================================
+struct NoteConfigItem  : public juce::Button
+{
+    NoteConfigItem (const NoteData& d = {})
+        : juce::Button (d.name),
+          label (d.name, d.name),
+          data (d)
+    {
+        label.setJustificationType (juce::Justification::centred);
+        label.setColour (juce::Label::ColourIds::textColourId,
+                         juce::Colours::darkgrey);
+        label.setInterceptsMouseClicks (false, false);
+
+        addAndMakeVisible (label);
+
+        setClickingTogglesState (true);
+    }
+
+    void setData (const NoteData& d)
+    {
+        data = d;
+
+        label.setText (data.name, juce::dontSendNotification);
+    }
+
+    void paintButton (juce::Graphics& g,
+                      bool shouldDrawButtonAsHighlighted,
+                      bool shouldDrawButtonAsDown) override
+    {
+        auto b = getLocalBounds();
+        auto colour = [&]
+        {
+            auto col = getToggleState() ? data.colour.interpolatedWith (juce::Colours::white, 0.6f)
+                                        : juce::Colours::grey;
+
+            if (shouldDrawButtonAsHighlighted)
+                col = col.brighter (0.3f);
+
+            if (shouldDrawButtonAsDown)
+                col = col.darker (0.5f);
+
+            return col;
+        }();
+
+        g.setColour (colour);
+        g.fillEllipse (b.toFloat());
+    }
+
+    void resized() override
+    {
+        label.setBounds (getLocalBounds());
+    }
+
+    juce::Label label;
+
+    NoteData data;
+
+    static constexpr auto height = 20;
+    static constexpr auto width = 30;
+};
+
+struct ConfigView  : public juce::Component
+{
+    ConfigView()
+    {
+        for (size_t i = 0; i < noteItems.size(); ++i)
+        {
+            auto& item = noteItems[i];
+            item.setData (noteData[i]);
+            addAndMakeVisible (item);
+        }
+    }
+
+    void resized() override
+    {
+        auto b = getLocalBounds();
+
+        juce::FlexBox box;
+        box.alignItems = juce::FlexBox::AlignItems::center;
+
+        box.items.add (juce::FlexItem{}.withFlex (1.0f));
+
+        for (auto& n : noteItems)
+        {
+            box.items.addArray ({ juce::FlexItem { NoteConfigItem::width, NoteConfigItem::height, n },
+                                  juce::FlexItem{}.withFlex (0.1f) });
+        }
+
+        box.items.add (juce::FlexItem{}.withFlex (0.9f));
+
+        box.performLayout (b);
+    }
+
+    //=================================================================================
+    static constexpr auto numNaturals = 7;
+    std::array<NoteConfigItem, numNaturals> noteItems;
+
+    std::array<NoteData, numNaturals> noteData {{ { "C", juce::Colours::crimson, 0 },
+                                                  { "D", juce::Colours::cyan, 1 },
+                                                  { "E", juce::Colours::green, 2 },
+                                                  { "F", juce::Colours::magenta, 3 },
+                                                  { "G", juce::Colours::orange, 4 },
+                                                  { "A", juce::Colours::yellowgreen, 5 },
+                                                  { "B", juce::Colours::blueviolet, 6 } }};
+
+    static constexpr auto margin = 6;
+    static constexpr auto height = NoteConfigItem::height + 2 * margin;
+};
+
+//=====================================================================================
 struct FretboardView  : public juce::Component
 {
     FretboardView()
     {
         for (auto& s : strings)
             addAndMakeVisible (s);
+
+        addAndMakeVisible (config);
     }
 
     void resized() override
     {
+        auto b = getLocalBounds();
+
+        config.setBounds (b.removeFromBottom (ConfigView::height));
+
         juce::FlexBox box;
         box.flexDirection = juce::FlexBox::Direction::columnReverse;
 
         for (auto& s : strings)
             box.items.add (juce::FlexItem { s }.withFlex (1.0f));
 
-        box.performLayout (getLocalBounds());
+        box.performLayout (b);
     }
 
     void paint (juce::Graphics& g) override
@@ -188,7 +321,6 @@ struct FretboardView  : public juce::Component
         g.fillAll (juce::Colours::darkgrey);
     }
 
-private:
     static constexpr auto numStrings = 6;
     std::array<StringView, numStrings> strings { juce::String ("E"),
                                                  { "A" },
@@ -196,4 +328,50 @@ private:
                                                  { "G" },
                                                  { "B" },
                                                  { "E" } };
+
+    ConfigView config;
+};
+
+//=====================================================================================
+class FretboardController
+{
+public:
+    FretboardController (FretboardView& viewIn)
+        : view (viewIn),
+          configItems (view.config.noteItems)
+    {
+        for (auto& c : configItems)
+            c.onClick = [this] { updateSelection(); };
+    }
+
+    ~FretboardController()
+    {
+        for (auto& c : configItems)
+            c.onClick = nullptr;
+    }
+
+private:
+    void updateSelection()
+    {
+        auto& configItems = view.config.noteItems;
+
+        std::vector<size_t> selectedItems;
+
+        for (auto& c : configItems)
+        {
+            if (c.getToggleState())
+                selectedItems.emplace_back (c.data.index);
+        }
+
+        showItems (selectedItems);
+    }
+
+    void showItems (const std::vector<size_t>& indices)
+    {
+        for (auto& s : view.strings)
+            s.showFrets (indices);
+    }
+
+    FretboardView& view;
+    std::array<NoteConfigItem, ConfigView::numNaturals>& configItems;
 };

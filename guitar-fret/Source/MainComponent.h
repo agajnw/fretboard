@@ -26,7 +26,8 @@ public:
 
 private:
     //==============================================================================
-    FretboardView fretboard;
+    FretboardView fretboardView;
+    FretboardController fretboardController { fretboardView };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

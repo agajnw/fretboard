@@ -6,7 +6,7 @@ MainComponent::MainComponent()
 {
     // Make sure you set the size of the component after
     // you add any child components.
-    setSize (234 * 3, 108 * 3);
+    setSize (234 * 4, 108 * 4);
 
     // Some platforms require permissions to open input channels so request that here
     if (juce::RuntimePermissions::isRequired (juce::RuntimePermissions::recordAudio)
@@ -21,7 +21,7 @@ MainComponent::MainComponent()
         setAudioChannels (2, 2);
     }
 
-    addAndMakeVisible (fretboard);
+    addAndMakeVisible (fretboardView);
 }
 
 MainComponent::~MainComponent()
@@ -72,5 +72,5 @@ void MainComponent::paint (juce::Graphics& g)
 
 void MainComponent::resized()
 {
-    fretboard.setBounds (getLocalBounds());
+    fretboardView.setBounds (getLocalBounds());
 }
