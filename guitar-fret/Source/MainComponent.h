@@ -2,6 +2,7 @@
 
 #include <JuceHeader.h>
 #include "FretView.h"
+#include "Metronome.h"
 
 //==============================================================================
 /*
@@ -26,8 +27,10 @@ public:
 
 private:
     //==============================================================================
+    Metronome metronome;
+
     FretboardView fretboardView;
-    FretboardController fretboardController { fretboardView };
+    FretboardController fretboardController { metronome, fretboardView };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

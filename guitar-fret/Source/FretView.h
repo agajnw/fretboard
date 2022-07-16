@@ -10,6 +10,8 @@
 
 #pragma once
 
+#include "Metronome.h"
+
 struct NoteData
 {
     juce::String name;
@@ -188,12 +190,13 @@ private:
 };
 
 //=====================================================================================
-struct NoteConfigItem  : public juce::Button
+struct ToggleButton  : public juce::Button
 {
-    NoteConfigItem (const NoteData& d = {})
-        : juce::Button (d.name),
-          label (d.name, d.name),
-          data (d)
+    ToggleButton (const juce::String& name = {},
+                  juce::Colour colourIn = juce::Colours::white)
+        : juce::Button (name),
+          label (name, name),
+          colour (colourIn)
     {
         label.setJustificationType (juce::Justification::centred);
         label.setColour (juce::Label::ColourIds::textColourId,
@@ -205,21 +208,14 @@ struct NoteConfigItem  : public juce::Button
         setClickingTogglesState (true);
     }
 
-    void setData (const NoteData& d)
-    {
-        data = d;
-
-        label.setText (data.name, juce::dontSendNotification);
-    }
-
     void paintButton (juce::Graphics& g,
                       bool shouldDrawButtonAsHighlighted,
                       bool shouldDrawButtonAsDown) override
     {
         auto b = getLocalBounds();
-        auto colour = [&]
+        auto colourToSet = [&]
         {
-            auto col = getToggleState() ? data.colour.interpolatedWith (juce::Colours::white, 0.6f)
+            auto col = getToggleState() ? colour.interpolatedWith (juce::Colours::white, 0.6f)
                                         : juce::Colours::grey;
 
             if (shouldDrawButtonAsHighlighted)
@@ -231,7 +227,7 @@ struct NoteConfigItem  : public juce::Button
             return col;
         }();
 
-        g.setColour (colour);
+        g.setColour (colourToSet);
         g.fillEllipse (b.toFloat());
     }
 
@@ -241,11 +237,28 @@ struct NoteConfigItem  : public juce::Button
     }
 
     juce::Label label;
-
-    NoteData data;
+    juce::Colour colour;
 
     static constexpr auto height = 20;
     static constexpr auto width = 30;
+};
+
+struct NoteConfigItem  : public ToggleButton
+{
+    NoteConfigItem (const NoteData& d = {})
+        : ToggleButton (d.name, d.colour),
+          data (d)
+    {}
+
+    void setData (const NoteData& d)
+    {
+        data = d;
+        colour = data.colour;
+
+        label.setText (data.name, juce::dontSendNotification);
+    }
+
+    NoteData data;
 };
 
 struct ConfigView  : public juce::Component
@@ -258,6 +271,11 @@ struct ConfigView  : public juce::Component
             item.setData (noteData[i]);
             addAndMakeVisible (item);
         }
+
+        bpm.setSliderSnapsToMousePosition (false);
+
+        addAndMakeVisible (bpm);
+        addAndMakeVisible (bpmToggle);
     }
 
     void resized() override
@@ -271,18 +289,38 @@ struct ConfigView  : public juce::Component
 
         for (auto& n : noteItems)
         {
-            box.items.addArray ({ juce::FlexItem { NoteConfigItem::width, NoteConfigItem::height, n },
+            box.items.addArray ({ juce::FlexItem { NoteConfigItem::width,
+                                                   NoteConfigItem::height,
+                                                   n },
                                   juce::FlexItem{}.withFlex (0.1f) });
         }
 
         box.items.add (juce::FlexItem{}.withFlex (0.9f));
 
         box.performLayout (b);
+
+        juce::FlexBox metronomeBox;
+
+        metronomeBox.alignItems = juce::FlexBox::AlignItems::center;
+        metronomeBox.items.addArray ({ juce::FlexItem{}.withFlex (1.0f),
+                                       juce::FlexItem { NoteConfigItem::width,
+                                                        NoteConfigItem::height,
+                                                        bpmToggle },
+                                       juce::FlexItem{}.withWidth (margin),
+                                       juce::FlexItem { NoteConfigItem::width * 4,
+                                                        NoteConfigItem::height,
+                                                        bpm },
+                                       juce::FlexItem{}.withFlex (1.0f) });
+
+        metronomeBox.performLayout (box.items.getLast().currentBounds);
     }
 
     //=================================================================================
     static constexpr auto numNaturals = 7;
     std::array<NoteConfigItem, numNaturals> noteItems;
+
+    juce::Slider bpm { juce::Slider::IncDecButtons, juce::Slider::TextBoxRight };
+    ToggleButton bpmToggle { "M", juce::Colours::orange };
 
     std::array<NoteData, numNaturals> noteData {{ { "C", juce::Colours::crimson, 0 },
                                                   { "D", juce::Colours::cyan, 2 },
@@ -293,7 +331,7 @@ struct ConfigView  : public juce::Component
                                                   { "B", juce::Colours::blueviolet, 11 } }};
 
     static constexpr auto margin = 6;
-    static constexpr auto height = NoteConfigItem::height + 2 * margin;
+    static constexpr auto height = NoteConfigItem::height * 2 + 2 * margin;
 };
 
 //=====================================================================================
@@ -342,18 +380,38 @@ struct FretboardView  : public juce::Component
 class FretboardController
 {
 public:
-    FretboardController (FretboardView& viewIn)
+    FretboardController (Metronome& metronome,
+                         FretboardView& viewIn)
         : view (viewIn),
-          configItems (view.config.noteItems)
+          config (view.config)
     {
-        for (auto& c : configItems)
+        for (auto& c : config.noteItems)
             c.onClick = [this] { updateSelection(); };
+
+        config.bpm.setRange (Metronome::minBpm, Metronome::maxBpm, 1.0);
+        config.bpm.setValue (metronome.getBpm());
+
+        config.bpmToggle.setToggleState (metronome.isPlaying(),
+                                         juce::dontSendNotification);
+
+        config.bpm.onValueChange = [this, &metronome]
+        {
+            metronome.setBpm (config.bpm.getValue());
+        };
+
+        config.bpmToggle.onClick = [this, &metronome]
+        {
+            metronome.setPlaying (config.bpmToggle.getToggleState());
+        };
     }
 
     ~FretboardController()
     {
-        for (auto& c : configItems)
+        for (auto& c : config.noteItems)
             c.onClick = nullptr;
+
+        config.bpm.onValueChange = nullptr;
+        config.bpmToggle.onClick = nullptr;
     }
 
 private:
@@ -379,5 +437,5 @@ private:
     }
 
     FretboardView& view;
-    std::array<NoteConfigItem, ConfigView::numNaturals>& configItems;
+    ConfigView& config;
 };

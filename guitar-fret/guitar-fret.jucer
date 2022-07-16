@@ -4,6 +4,7 @@
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" cppLanguageStandard="17">
   <MAINGROUP id="khKfNe" name="Fretboard">
     <GROUP id="{25FE4387-F88E-A8D2-25F6-6E5C613AE89C}" name="Source">
+      <FILE id="a0cECo" name="Metronome.h" compile="0" resource="0" file="Source/Metronome.h"/>
       <FILE id="bgDyyR" name="FretView.cpp" compile="0" resource="0" file="Source/FretView.cpp"/>
       <FILE id="ndHTX1" name="FretView.h" compile="0" resource="0" file="Source/FretView.h"/>
       <FILE id="vkZx5Z" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
@@ -11,6 +12,7 @@
       <FILE id="PYokq9" name="MainComponent.cpp" compile="1" resource="0"
             file="Source/MainComponent.cpp"/>
     </GROUP>
+    <FILE id="RhKRH2" name="tick.wav" compile="0" resource="1" file="Resources/tick.wav"/>
   </MAINGROUP>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1"/>
   <EXPORTFORMATS>
