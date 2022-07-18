@@ -10,11 +10,11 @@
 #include "MainComponent.h"
 
 //==============================================================================
-class guitarfretApplication  : public juce::JUCEApplication
+class FretboardApplication  : public juce::JUCEApplication
 {
 public:
     //==============================================================================
-    guitarfretApplication() {}
+    FretboardApplication() {}
 
     const juce::String getApplicationName() override       { return ProjectInfo::projectName; }
     const juce::String getApplicationVersion() override    { return ProjectInfo::versionString; }
@@ -102,4 +102,4 @@ private:
 
 //==============================================================================
 // This macro generates the main() routine that launches the app.
-START_JUCE_APPLICATION (guitarfretApplication)
+START_JUCE_APPLICATION (FretboardApplication)
