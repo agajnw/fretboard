@@ -113,10 +113,10 @@ struct FretView  : public juce::Component
         }
 
         if (drawLineUp)
-            g.fillRect (b.getX(), b.getY(), 1, b.getHeight() / 2);
+            g.fillRect (b.getX(), b.getY(), 1, b.getHeight() / 2 + 2);
 
         if (drawLineDown)
-            g.fillRect (b.getX(), centreY, 1, b.getHeight() / 2);
+            g.fillRect (b.getX(), centreY - 1, 1, b.getHeight() / 2 + 1);
     }
 
     static constexpr auto circleSize = 35;
