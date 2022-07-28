@@ -368,7 +368,18 @@ struct ConfigView  : public juce::Component
             addAndMakeVisible (item);
         }
 
+        for (auto* c : { &defaultOrderButton, &randomOrderButton })
+        {
+            c->setClickingTogglesState (false);
+            addAndMakeVisible (c);
+        }
+
         addAndMakeVisible (bpm);
+
+        defaultOrderButton.onClick = [this] { updateNoteOrder (NoteOrder::ascending); };
+        randomOrderButton.onClick = [this] { updateNoteOrder (NoteOrder::random); };
+
+        updateNoteOrder (NoteOrder::ascending);
     }
 
     void resized() override
@@ -380,11 +391,11 @@ struct ConfigView  : public juce::Component
 
         box.items.add (juce::FlexItem{}.withFlex (1.0f));
 
-        for (auto& n : noteItems)
+        for (auto i = 0; i < numNaturals; ++i)
         {
             box.items.addArray ({ juce::FlexItem { NoteConfigItem::width,
                                                    NoteConfigItem::height,
-                                                   n },
+                                                   noteItems[noteItemsOrder[i]] },
                                   juce::FlexItem{}.withFlex (0.1f) });
         }
 
@@ -403,6 +414,21 @@ struct ConfigView  : public juce::Component
                                        juce::FlexItem{}.withFlex (1.0f) });
 
         metronomeBox.performLayout (box.items.getLast().currentBounds);
+
+        juce::FlexBox orderBox;
+
+        orderBox.alignItems = juce::FlexBox::AlignItems::center;
+        orderBox.items.addArray ({ juce::FlexItem{}.withFlex (1.0f),
+                                   juce::FlexItem { BpmControl::width,
+                                                    BpmControl::height,
+                                                    defaultOrderButton },
+                                   juce::FlexItem{}.withWidth (margin),
+                                   juce::FlexItem { BpmControl::width,
+                                                    BpmControl::height,
+                                                    randomOrderButton },
+                                   juce::FlexItem{}.withFlex (1.0f) });
+        orderBox.performLayout (box.items.getFirst().currentBounds);
+
     }
 
     void paint (juce::Graphics& g) override
@@ -410,10 +436,46 @@ struct ConfigView  : public juce::Component
         g.fillAll (Styling::Colours::bgRaised);
     }
 
+    enum class NoteOrder { ascending, random };
+    void updateNoteOrder (NoteOrder noteOrder)
+    {
+        std::vector<int> defaultIndices;
+
+        for (auto i = 0; i < numNaturals; ++i)
+            defaultIndices.emplace_back (i);
+
+        noteItemsOrder.clear();
+
+        if (noteOrder == NoteOrder::ascending)
+        {
+            noteItemsOrder = defaultIndices;
+        }
+        else
+        {
+            juce::Random random;
+
+            for (auto i = numNaturals; i > 0; --i)
+            {
+                auto ind = random.nextInt ((int) i);
+
+                noteItemsOrder.emplace_back (defaultIndices[ind]);
+
+                std::remove (defaultIndices.begin(),
+                             defaultIndices.end(),
+                             defaultIndices[ind]);
+            }
+        }
+
+        resized();
+    }
+
     //=================================================================================
     static constexpr auto numNaturals = 7;
     std::array<NoteConfigItem, numNaturals> noteItems;
+    std::vector<int> noteItemsOrder;
 
+    ToggleButton defaultOrderButton { "Default" };
+    ToggleButton randomOrderButton { "Random" };
     BpmControl bpm;
 
     std::array<NoteData, numNaturals> noteData {{  { "C", juce::Colour { 0xFF499271 }, 0 },
