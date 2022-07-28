@@ -17,11 +17,12 @@ namespace Styling
     namespace Colours
     {
         static inline const juce::Colour text { 0xffdce2f2 };
-        static inline const juce::Colour string { 0xff9b93a3 };
-        static inline const juce::Colour fret { 0xff93a2a3 };
-        static inline const juce::Colour metronome { 0xffe0603a };
-        static inline const juce::Colour deselected { 0xff4e5061 };
-        static inline const juce::Colour bgRaised { 0xff3a474f };
+        static inline const juce::Colour string { 0xFF60666C };
+        static inline const juce::Colour fret { 0xFF59636D };
+        static inline const juce::Colour metronome { 0xFF8ABC62 };
+        static inline const juce::Colour deselected { 0xFF6D758B };
+        static inline const juce::Colour background { 0xFF161C22 };
+        static inline const juce::Colour bgRaised { 0xFF363E55 };
         static inline const juce::Colour bgHalfRaised = bgRaised.withAlpha (0.4f);
     }
 
@@ -93,7 +94,7 @@ struct FretView  : public juce::Component
         };
 
         if (bgColour.has_value())
-            g.fillAll (bgColour->withAlpha (0.4f));
+            g.fillAll (*bgColour);
 
         if (! label.isVisible())
         {
@@ -203,18 +204,18 @@ struct StringView  : public juce::Component
 private:
     static constexpr auto numFrets = 12;
 
-    std::array<NoteData, numFrets> noteData {{ { "C", juce::Colour { 0xfff56c6c }, 0 },
+    std::array<NoteData, numFrets> noteData {{ { "C", juce::Colour { 0xFF499271 }, 0 },
                                                { "", juce::Colour { 0x00000000 }, 1 },
-                                               { "D", juce::Colour { 0xffe08d55 }, 2 },
+                                               { "D", juce::Colour { 0xFF50819B }, 2 },
                                                { "", juce::Colour { 0x00000000 }, 3 },
-                                               { "E", juce::Colour { 0xff948f35 }, 4 },
-                                               { "F", juce::Colour { 0xff85466b }, 5 },
+                                               { "E", juce::Colour { 0xFF6A519D }, 4 },
+                                               { "F", juce::Colour { 0xFF8F528E }, 5 },
                                                { "", juce::Colour { 0x00000000 }, 6 },
-                                               { "G", juce::Colour { 0xff3d856e }, 7 },
+                                               { "G", juce::Colour { 0xFF9C4E60 }, 7 },
                                                { "", juce::Colour { 0x00000000 }, 8 },
-                                               { "A", juce::Colour { 0xff7a6ff2 }, 9 },
+                                               { "A", juce::Colour { 0xFF94874C }, 9 },
                                                { "", juce::Colour { 0x00000000 }, 10 },
-                                               { "B", juce::Colour { 0xffb76ff2 }, 11 }, }};
+                                               { "B", juce::Colour { 0xFFAC6F4F }, 11 }, }};
 
     std::array<FretView, numFrets> frets;
     juce::Label openNoteName;
@@ -415,13 +416,13 @@ struct ConfigView  : public juce::Component
 
     BpmControl bpm;
 
-    std::array<NoteData, numNaturals> noteData {{  { "C", juce::Colour { 0xfff56c6c }, 0 },
-                                                   { "D", juce::Colour { 0xffe08d55 }, 2 },
-                                                   { "E", juce::Colour { 0xff948f35 }, 4 },
-                                                   { "F", juce::Colour { 0xff85466b }, 5 },
-                                                   { "G", juce::Colour { 0xff3d856e }, 7 },
-                                                   { "A", juce::Colour { 0xff7a6ff2 }, 9 },
-                                                   { "B", juce::Colour { 0xffb76ff2 }, 11 } }};
+    std::array<NoteData, numNaturals> noteData {{  { "C", juce::Colour { 0xFF499271 }, 0 },
+                                                   { "D", juce::Colour { 0xFF50819B }, 2 },
+                                                   { "E", juce::Colour { 0xFF6A519D }, 4 },
+                                                   { "F", juce::Colour { 0xFF8F528E }, 5 },
+                                                   { "G", juce::Colour { 0xFF9C4E60 }, 7 },
+                                                   { "A", juce::Colour { 0xFF94874C }, 9 },
+                                                   { "B", juce::Colour { 0xFFAC6F4F }, 11 } }};
 
     static constexpr auto margin = 6;
     static constexpr auto height = NoteConfigItem::height * 2 + 2 * margin;
@@ -514,7 +515,7 @@ struct FretboardView  : public juce::Component
 
     void paint (juce::Graphics& g) override
     {
-        g.fillAll (juce::Colour { 0xff273036 });
+        g.fillAll (juce::Colour { Styling::Colours::background });
 
         const auto getCentreY = [this] (auto& c)
         {
