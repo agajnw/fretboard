@@ -258,7 +258,7 @@ struct ToggleButton  : public juce::Button
     juce::Colour getBgColour (bool shouldDrawButtonAsHighlighted,
                               bool shouldDrawButtonAsDown) const
     {
-        auto col = getToggleState() ? colour : Styling::Colours::deselected;
+        auto col = isHighlighted() ? colour : Styling::Colours::deselected;
 
         if (shouldDrawButtonAsHighlighted)
             col = col.brighter (0.3f);
@@ -268,6 +268,8 @@ struct ToggleButton  : public juce::Button
 
         return col;
     }
+
+    virtual bool isHighlighted() const { return getToggleState(); }
 
     juce::Label label;
     juce::Colour colour;
@@ -291,7 +293,13 @@ struct NoteConfigItem  : public ToggleButton
         label.setText (data.name, juce::dontSendNotification);
     }
 
+    bool isHighlighted() const override
+    {
+        return getToggleState() || showingAll;
+    }
+
     NoteData data;
+    bool showingAll{};
 };
 
 struct BpmControl  : public ToggleButton,
@@ -380,6 +388,7 @@ struct ConfigView  : public juce::Component
         randomOrderButton.onClick = [this] { updateNoteOrder (NoteOrder::random); };
 
         updateNoteOrder (NoteOrder::ascending);
+        updateHighlight();
     }
 
     void resized() override
@@ -467,6 +476,20 @@ struct ConfigView  : public juce::Component
         }
 
         resized();
+    }
+
+    void updateHighlight()
+    {
+        const auto firstToggledOn = noteItems.front().getToggleState();
+        const auto highlightAll = std::all_of (noteItems.begin(),
+                                               noteItems.end(),
+                                               [firstToggledOn] (const auto& it)
+                                               { return it.getToggleState() == firstToggledOn; });
+        for (auto& it : noteItems)
+        {
+            it.showingAll = highlightAll;
+            it.repaint();
+        }
     }
 
     //=================================================================================
@@ -669,6 +692,8 @@ private:
         }
 
         showItems (selectedItems);
+
+        view.config.updateHighlight();
     }
 
     void showItems (const std::vector<size_t>& indices)
