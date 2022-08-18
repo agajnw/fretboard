@@ -616,6 +616,12 @@ public:
         : view (viewIn),
           config (view.config)
     {
+        if (auto savedValue = propertiesFile.getDoubleValue (bpmPropertyId);
+            savedValue != 0.0)
+        {
+            metronome.setBpm (savedValue);
+        }
+
         for (auto& c : config.noteItems)
             c.onClick = [this] { updateSelection(); };
 
@@ -627,7 +633,9 @@ public:
 
         config.bpm.slider.onValueChange = [this, &metronome]
         {
-            metronome.setBpm (config.bpm.slider.getValue());
+            const auto value = config.bpm.slider.getValue();
+            metronome.setBpm (value);
+            saveBpmProperty (value);
         };
 
         config.bpm.onClick = [this, &metronome]
@@ -638,6 +646,8 @@ public:
 
     ~FretboardController()
     {
+        propertiesFile.saveIfNeeded();
+
         for (auto& c : config.noteItems)
             c.onClick = nullptr;
 
@@ -667,6 +677,30 @@ private:
             s.showFrets (indices);
     }
 
+    void saveBpmProperty (double value)
+    {
+        propertiesFile.setValue (bpmPropertyId, value);
+        propertiesFile.saveIfNeeded();
+    }
+
+    static juce::PropertiesFile::Options getPropertiesFileOptions()
+    {
+        juce::PropertiesFile::Options options;
+
+        static const auto name = "Fretboard";
+
+        options.applicationName = name;
+        options.osxLibrarySubFolder = "Application Support/" + juce::String (name);
+
+        options.filenameSuffix = ".settings";
+
+        return options;
+    }
+
     FretboardView& view;
     ConfigView& config;
+
+    juce::PropertiesFile propertiesFile { getPropertiesFileOptions() };
+
+    const juce::String bpmPropertyId { "bpm" };
 };
