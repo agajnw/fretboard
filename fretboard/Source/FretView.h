@@ -466,12 +466,14 @@ struct ConfigView  : public juce::Component
             for (auto i = numNaturals; i > 0; --i)
             {
                 auto ind = random.nextInt ((int) i);
+                const auto picked = defaultIndices[(size_t) ind];
 
-                noteItemsOrder.emplace_back (defaultIndices[ind]);
+                noteItemsOrder.emplace_back (picked);
 
-                std::remove (defaultIndices.begin(),
-                             defaultIndices.end(),
-                             defaultIndices[ind]);
+                defaultIndices.erase (std::remove (defaultIndices.begin(),
+                                                   defaultIndices.end(),
+                                                   picked),
+                                      defaultIndices.end());
             }
         }
 
