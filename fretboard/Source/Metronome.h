@@ -50,27 +50,32 @@ public:
 
     void getNextAudioBlock (const juce::AudioSourceChannelInfo& bufferToFill)
     {
-        if (! playing || resamplingSource == nullptr)
+        if (! playing || interval <= 0 || resamplingSource == nullptr)
             return;
 
-        samplesCount += bufferToFill.numSamples;
+        auto position = bufferToFill.startSample;
+        const auto endSample = bufferToFill.startSample + bufferToFill.numSamples;
 
-        if (interval > 0 && samplesCount / interval > 0)
+        while (position < endSample)
         {
-            const auto offset = samplesCount - interval;
-            const auto numSamplesToFill = bufferToFill.numSamples - offset;
+            if (samplesUntilNextTick <= 0)
+            {
+                readerSource->setNextReadPosition (0);
+                samplesUntilNextTick = interval;
+            }
 
-            readerSource->setNextReadPosition (0);
-            resamplingSource->getNextAudioBlock ({ bufferToFill.buffer,
-                                                   offset,
-                                                   numSamplesToFill });
+            const auto samplesToEnd = endSample - position;
+            const auto samplesThisStep = juce::jmin (samplesToEnd, samplesUntilNextTick);
 
-            samplesCount = samplesCount % interval;
-        }
-        else if (const auto p = readerSource->getNextReadPosition();
-                 p != 0 && p < readerSource->getTotalLength())
-        {
-            resamplingSource->getNextAudioBlock (bufferToFill);
+            if (readerSource->getNextReadPosition() < readerSource->getTotalLength())
+            {
+                resamplingSource->getNextAudioBlock ({ bufferToFill.buffer,
+                                                       position,
+                                                       samplesThisStep });
+            }
+
+            samplesUntilNextTick -= samplesThisStep;
+            position += samplesThisStep;
         }
     }
 
@@ -80,8 +85,7 @@ public:
             return;
 
         playing = playingIn;
-
-        samplesCount = {};
+        samplesUntilNextTick = interval;
     }
 
     bool isPlaying() const noexcept { return playing; }
@@ -100,13 +104,14 @@ public:
 private:
     void resetInterval()
     {
-        interval = (int) (60.0 / bpm * sampleRate);
+        interval = sampleRate > 0.0 ? (int) std::round (60.0 / bpm * sampleRate) : 0;
+        samplesUntilNextTick = interval;
     }
 
     std::atomic<double> bpm = minBpm;
-    std::atomic<int> interval;
-    int samplesCount{};
     double fileSampleRate = 44100.0;
+    int interval{};
+    int samplesUntilNextTick{};
     double sampleRate{};
     bool playing{};
 
