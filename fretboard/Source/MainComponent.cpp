@@ -24,6 +24,7 @@ void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRat
 
 void MainComponent::getNextAudioBlock (const juce::AudioSourceChannelInfo& bufferToFill)
 {
+    bufferToFill.clearActiveBufferRegion();
     metronome.getNextAudioBlock (bufferToFill);
 }
 
