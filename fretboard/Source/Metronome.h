@@ -15,26 +15,25 @@ class Metronome
 public:
     Metronome()
     {
-        auto formatReader = []
+        juce::AudioFormatManager formatManager;
+        formatManager.registerBasicFormats();
+
+        auto inputStream = std::make_unique<juce::MemoryInputStream> (BinaryData::tick_wav,
+                                                                    BinaryData::tick_wavSize,
+                                                                    false);
+
+        if (auto* reader = formatManager.createReaderFor (std::move (inputStream)))
         {
-            juce::AudioFormatManager formatManager;
-
-            formatManager.registerBasicFormats();
-
-            auto inputStream = std::make_unique<juce::MemoryInputStream> (BinaryData::tick_wav,
-                                                                          BinaryData::tick_wavSize,
-                                                                          false);
-
-            return formatManager.createReaderFor (std::move (inputStream));
-        }();
-
-        if (formatReader == nullptr)
+            fileSampleRate = reader->sampleRate;
+            readerSource = std::make_unique<juce::AudioFormatReaderSource> (reader, true);
+            resamplingSource = std::make_unique<juce::ResamplingAudioSource> (readerSource.get(),
+                                                                              false,
+                                                                              2);
+        }
+        else
         {
             jassertfalse;
-            return;
         }
-
-        sampleReader = std::make_unique<juce::AudioFormatReaderSource> (formatReader, true);
     }
 
     void prepareToPlay (int samplesPerBlockExpected, double sampleRateIn)
@@ -42,33 +41,36 @@ public:
         sampleRate = sampleRateIn;
         resetInterval();
 
-        if (sampleReader != nullptr)
-            sampleReader->prepareToPlay (samplesPerBlockExpected, sampleRateIn);
+        if (resamplingSource != nullptr)
+        {
+            resamplingSource->setResamplingRatio (fileSampleRate / sampleRateIn);
+            resamplingSource->prepareToPlay (samplesPerBlockExpected, sampleRateIn);
+        }
     }
 
     void getNextAudioBlock (const juce::AudioSourceChannelInfo& bufferToFill)
     {
-        if (! playing)
+        if (! playing || resamplingSource == nullptr)
             return;
 
         samplesCount += bufferToFill.numSamples;
 
-        if (samplesCount / interval > 0)
+        if (interval > 0 && samplesCount / interval > 0)
         {
             const auto offset = samplesCount - interval;
             const auto numSamplesToFill = bufferToFill.numSamples - offset;
 
-            sampleReader->setNextReadPosition (0);
-            sampleReader->getNextAudioBlock ({ bufferToFill.buffer,
-                                               offset,
-                                               numSamplesToFill });
+            readerSource->setNextReadPosition (0);
+            resamplingSource->getNextAudioBlock ({ bufferToFill.buffer,
+                                                   offset,
+                                                   numSamplesToFill });
 
             samplesCount = samplesCount % interval;
         }
-        else if (const auto p = sampleReader->getNextReadPosition();
-                 p != 0 && p < sampleReader->getTotalLength())
+        else if (const auto p = readerSource->getNextReadPosition();
+                 p != 0 && p < readerSource->getTotalLength())
         {
-            sampleReader->getNextAudioBlock (bufferToFill);
+            resamplingSource->getNextAudioBlock (bufferToFill);
         }
     }
 
@@ -104,8 +106,10 @@ private:
     std::atomic<double> bpm = minBpm;
     std::atomic<int> interval;
     int samplesCount{};
+    double fileSampleRate = 44100.0;
     double sampleRate{};
     bool playing{};
 
-    std::unique_ptr <juce::AudioFormatReaderSource> sampleReader { nullptr };
+    std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
+    std::unique_ptr<juce::ResamplingAudioSource> resamplingSource;
 };
