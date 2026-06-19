@@ -6,7 +6,7 @@ MainComponent::MainComponent()
 {
     setSize (234 * 4, 108 * 4);
 
-    setAudioChannels (2, 2);
+    setAudioChannels (0, 2);
 
     addAndMakeVisible (fretboardView);
 }
