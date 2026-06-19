@@ -19,8 +19,8 @@ public:
         formatManager.registerBasicFormats();
 
         auto inputStream = std::make_unique<juce::MemoryInputStream> (BinaryData::tick_wav,
-                                                                    BinaryData::tick_wavSize,
-                                                                    false);
+                                                                      BinaryData::tick_wavSize,
+                                                                      false);
 
         if (auto* reader = formatManager.createReaderFor (std::move (inputStream)))
         {
@@ -110,9 +110,9 @@ private:
 
     std::atomic<double> bpm = minBpm;
     double fileSampleRate = 44100.0;
-    int interval{};
-    int samplesUntilNextTick{};
     double sampleRate{};
+    int samplesUntilNextTick{};
+    int interval{};
     bool playing{};
 
     std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
