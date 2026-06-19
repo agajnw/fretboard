@@ -22,17 +22,18 @@
         <CONFIGURATION isDebug="0" name="Release" targetName="guitar-fret"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
-        <MODULEPATH id="juce_audio_basics" path="../../../work/roli-software/JUCE/modules"/>
-        <MODULEPATH id="juce_audio_devices" path="../../../work/roli-software/JUCE/modules"/>
-        <MODULEPATH id="juce_audio_formats" path="../../../work/roli-software/JUCE/modules"/>
-        <MODULEPATH id="juce_audio_processors" path="../../../work/roli-software/JUCE/modules"/>
-        <MODULEPATH id="juce_audio_utils" path="../../../work/roli-software/JUCE/modules"/>
-        <MODULEPATH id="juce_core" path="../../../work/roli-software/JUCE/modules"/>
-        <MODULEPATH id="juce_data_structures" path="../../../work/roli-software/JUCE/modules"/>
-        <MODULEPATH id="juce_events" path="../../../work/roli-software/JUCE/modules"/>
-        <MODULEPATH id="juce_graphics" path="../../../work/roli-software/JUCE/modules"/>
-        <MODULEPATH id="juce_gui_basics" path="../../../work/roli-software/JUCE/modules"/>
-        <MODULEPATH id="juce_gui_extra" path="../../../work/roli-software/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_basics" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors_headless" path="../../JUCE/modules"/>
       </MODULEPATHS>
     </XCODE_IPHONE>
     <XCODE_MAC targetFolder="Builds/MacOSX" extraCompilerFlags="-Werror  -Wimplicit-fallthrough -Wno-switch-enum">
@@ -41,17 +42,18 @@
         <CONFIGURATION isDebug="0" name="Release"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
-        <MODULEPATH id="juce_audio_basics" path="/Users/aggie/work/roli-software/JUCE/modules"/>
-        <MODULEPATH id="juce_audio_devices" path="/Users/aggie/work/roli-software/JUCE/modules"/>
-        <MODULEPATH id="juce_audio_formats" path="/Users/aggie/work/roli-software/JUCE/modules"/>
-        <MODULEPATH id="juce_audio_processors" path="/Users/aggie/work/roli-software/JUCE/modules"/>
-        <MODULEPATH id="juce_audio_utils" path="/Users/aggie/work/roli-software/JUCE/modules"/>
-        <MODULEPATH id="juce_core" path="/Users/aggie/work/roli-software/JUCE/modules"/>
-        <MODULEPATH id="juce_data_structures" path="/Users/aggie/work/roli-software/JUCE/modules"/>
-        <MODULEPATH id="juce_events" path="/Users/aggie/work/roli-software/JUCE/modules"/>
-        <MODULEPATH id="juce_graphics" path="/Users/aggie/work/roli-software/JUCE/modules"/>
-        <MODULEPATH id="juce_gui_basics" path="/Users/aggie/work/roli-software/JUCE/modules"/>
-        <MODULEPATH id="juce_gui_extra" path="/Users/aggie/work/roli-software/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_basics" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors_headless" path="../../JUCE/modules"/>
       </MODULEPATHS>
     </XCODE_MAC>
   </EXPORTFORMATS>
@@ -60,6 +62,8 @@
     <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_processors_headless" showAllCode="1" useLocalCopy="0"
+            useGlobalPath="1"/>
     <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
